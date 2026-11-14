@@ -2,12 +2,14 @@ import streamlit as st
 import pandas as pd
 import requests
 import plotly.express as px
+import io
+import time
 
 # ==============================================================================
-# 1. CONFIGURACIÓN DE PÁGINA Y ESTILOS CSS PERSONALIZADOS (TARJETAS KPI + BORDES)
+# 1. CONFIGURACIÓN DE PÁGINA Y ESTILOS CSS PERSONALIZADOS (BENTO CARDS + BORDES)
 # ==============================================================================
 st.set_page_config(
-    page_title="Dashboard Financiero | DOP & USD",
+    page_title="Dashboard Financiero DOP & USD | Sincronizado con GitHub",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -15,11 +17,11 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    /* Fondo general y espaciado */
+    /* Fondo general */
     .main {
         background-color: #f8fafc;
     }
-    /* Estilo de Tarjetas KPI con bordes, sombras y acento lateral */
+    /* Estilo de Tarjetas Bento KPI con bordes y acento lateral */
     .kpi-card {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
@@ -72,11 +74,26 @@ st.markdown("""
         font-size: 0.95rem;
         color: #dbeafe;
     }
+    /* Badge de Fuente Activa */
+    .source-badge {
+        display: inline-block;
+        background-color: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.80rem;
+        font-weight: 700;
+        margin-top: 6px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
+# URL oficial del archivo Excel en crudo alojado en GitHub
+URL_EXCEL_GITHUB = "https://raw.githubusercontent.com/JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit/main/estados_financieros_rd.xlsx"
+
 # ==============================================================================
-# 2. FUNCIONES DE EXTRACCIÓN (API DIVISAS + EXCEL) CON CACHÉ
+# 2. FUNCIONES DE EXTRACCIÓN (API DIVISAS + EXCEL DESDE GITHUB / LOCAL) CON CACHÉ
 # ==============================================================================
 @st.cache_data(ttl=3600)
 def obtener_tasa_cambio():
@@ -96,22 +113,51 @@ def obtener_tasa_cambio():
         except requests.exceptions.RequestException:
             continue
     # Respaldo de emergencia si no hay internet
-    return (1 / 60.80), 60.80, "Tasa Referencial (Offline)"
+    return (1 / 60.83), 60.83, "Tasa Referencial (Offline)"
 
-@st.cache_data
-def cargar_excel(ruta_o_buffer):
-    """Lee las hojas del Excel y calcula márgenes en Pandas para evitar NaN."""
+@st.cache_data(ttl=60)
+def descargar_excel_github(url):
+    """
+    Descarga el archivo Excel en vivo desde GitHub con headers anticaché.
+    TTL de 60 segundos: cada 60s consulta si hay nueva versión en el repo.
+    """
+    headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+    }
+    # Parametro de versión con timestamp para evitar el caché intermedio de CDNs
+    url_con_ts = f"{url}?v={int(time.time() // 60)}"
+    try:
+        res = requests.get(url_con_ts, headers=headers, timeout=12)
+        if res.status_code == 200 and len(res.content) > 1000:
+            return io.BytesIO(res.content), "🌐 Repositorio GitHub (En Vivo)", True
+    except requests.exceptions.RequestException:
+        pass
+    
+    # Intento con URL limpia de respaldo
+    try:
+        res_clean = requests.get(url, timeout=10)
+        if res_clean.status_code == 200 and len(res_clean.content) > 1000:
+            return io.BytesIO(res_clean.content), "🌐 Repositorio GitHub (En Vivo)", True
+    except requests.exceptions.RequestException:
+        pass
+
+    return None, "Error de Conexión GitHub", False
+
+def procesar_excel(ruta_o_buffer):
+    """Lee las hojas del Excel y recalcula márgenes en Pandas para evitar celdas vacías."""
     df_bg = pd.read_excel(ruta_o_buffer, sheet_name="Balance_General", header=3).dropna(subset=["Codigo"])
     df_er = pd.read_excel(ruta_o_buffer, sheet_name="Estado_Resultados", header=3)
     df_er = df_er[df_er["Mes"] != "TOTAL"].copy()
 
-    # Recálculo limpio en Pandas (evita celdas en caché vacías de openpyxl)
+    # Recálculo limpio en memoria
     df_er["Margen_Bruto_DOP"] = df_er["Ingresos_DOP"] - df_er["Costos_DOP"]
     df_er["Porcentaje_Margen"] = (df_er["Margen_Bruto_DOP"] / df_er["Ingresos_DOP"]) * 100
     return df_bg, df_er
 
 # ==============================================================================
-# 3. SIDEBAR: CONTROLES, FILTROS Y FUENTE DE DATOS
+# 3. SIDEBAR: CONTROLES, ORIGEN DE DATOS (GITHUB / LOCAL / UPLOAD) Y FILTROS
 # ==============================================================================
 with st.sidebar:
     st.markdown("## ⚙️ Panel de Control")
@@ -127,83 +173,131 @@ with st.sidebar:
 
     st.divider()
 
-    # Opción para subir Excel actualizado o usar el local/GitHub
-    archivo_subido = st.file_uploader("📂 Cargar Excel actualizado (.xlsx)", type=["xlsx"])
-    fuente_excel = archivo_subido if archivo_subido is not None else "estados_financieros_rd.xlsx"
+    st.markdown("### 📥 Fuente del Libro Excel")
+    opcion_origen = st.radio(
+        "Seleccione el origen del archivo:",
+        options=[
+            "🌐 GitHub Live (En Tiempo Real)",
+            "📂 Subir archivo Excel (.xlsx)",
+            "💻 Archivo Local de Respaldo"
+        ],
+        index=0
+    )
+
+    buffer_excel = None
+    etiqueta_fuente = ""
+    es_github = False
+
+    if opcion_origen == "🌐 GitHub Live (En Tiempo Real)":
+        buffer_excel, etiqueta_fuente, exito = descargar_excel_github(URL_EXCEL_GITHUB)
+        if exito:
+            st.success("✅ Conectado al repo oficial en GitHub.")
+            st.caption(f"Cada vez que subas cambios a GitHub, Streamlit los reflejará automáticamente.")
+            if st.button("🔄 Refrescar datos desde GitHub"):
+                st.cache_data.clear()
+                st.rerun()
+            es_github = True
+        else:
+            st.warning("⚠️ No se pudo descargar desde GitHub. Usando archivo local de respaldo.")
+            buffer_excel = "estados_financieros_rd.xlsx"
+            etiqueta_fuente = "💻 Archivo Local (Fallback de Emergencia)"
+
+    elif opcion_origen == "📂 Subir archivo Excel (.xlsx)":
+        archivo_subido = st.file_uploader("Arrastra tu archivo Excel contable:", type=["xlsx"])
+        if archivo_subido is not None:
+            buffer_excel = archivo_subido
+            etiqueta_fuente = f"📂 Subido por usuario: {archivo_subido.name}"
+            st.success("✅ Archivo cargado correctamente.")
+        else:
+            buffer_excel = "estados_financieros_rd.xlsx"
+            etiqueta_fuente = "💻 Archivo Local (En espera de archivo)"
+            st.info("ℹ️ Mostrando datos de respaldo locales hasta que subas un archivo.")
+
+    else:
+        buffer_excel = "estados_financieros_rd.xlsx"
+        etiqueta_fuente = "💻 Archivo Local del Servidor"
 
     # Botón para refrescar tasa de API
-    if st.button("🔄 Actualizar Tasa API", use_container_width=True):
+    if st.button("🔄 Actualizar Tasa de Divisas"):
         st.cache_data.clear()
+        st.rerun()
 
 # ==============================================================================
-# 4. CARGA Y PROCESAMIENTO DE DATOS
+# 4. CARGA DE DATOS Y CONVERSIÓN DE MONEDA
 # ==============================================================================
-tasa_dop_a_usd, tasa_usd_a_dop, fecha_tasa = obtener_tasa_cambio()
-factor = tasa_dop_a_usd if es_usd else 1.0
+tasa_dop_a_usd, tasa_usd_a_rd, fecha_tasa = obtener_tasa_cambio()
 
 try:
-    df_balance, df_resultados = cargar_excel(fuente_excel)
+    df_balance, df_resultados = procesar_excel(buffer_excel)
 except Exception as e:
-    st.error(f"❌ No se pudo leer el archivo Excel (`estados_financieros_rd.xlsx`). Verifica que esté en la carpeta o súbelo en el menú lateral. Detalle: {e}")
+    st.error(f"Error procesando el archivo Excel: {e}")
     st.stop()
 
-# Filtros interactivos en Sidebar para Estado de Resultados
-with st.sidebar:
-    st.divider()
-    st.markdown("### 🔍 Filtros de Resultados")
-    meses_disp = sorted(df_resultados["Mes"].unique())
-    meses_sel = st.multiselect("📅 Meses:", options=meses_disp, default=meses_disp)
+# Aplicar factor de conversión según moneda elegida
+factor = tasa_dop_a_usd if es_usd else 1.0
 
-    lineas_disp = sorted(df_resultados["Linea_Negocio"].unique())
-    lineas_sel = st.multiselect("🏢 Línea de Negocio:", options=lineas_disp, default=lineas_disp)
-
-# Aplicar filtros al Estado de Resultados
-df_er_filt = df_resultados[
-    (df_resultados["Mes"].isin(meses_sel)) &
-    (df_resultados["Linea_Negocio"].isin(lineas_sel))
-].copy()
-
-# Transformar montos según moneda elegida
 df_balance["Monto_Mostrar"] = (df_balance["Monto_DOP"] * factor).round(2)
-df_er_filt["Ingresos"] = (df_er_filt["Ingresos_DOP"] * factor).round(2)
-df_er_filt["Costos"] = (df_er_filt["Costos_DOP"] * factor).round(2)
-df_er_filt["Margen_Bruto"] = (df_er_filt["Margen_Bruto_DOP"] * factor).round(2)
-df_er_filt["Gastos_Operativos"] = (df_er_filt["Gastos_Operativos_DOP"] * factor).round(2)
+df_resultados["Ingresos"] = (df_resultados["Ingresos_DOP"] * factor).round(2)
+df_resultados["Costos"] = (df_resultados["Costos_DOP"] * factor).round(2)
+df_resultados["Margen_Bruto"] = (df_resultados["Margen_Bruto_DOP"] * factor).round(2)
+df_resultados["Gastos_Operativos"] = (df_resultados["Gastos_Operativos_DOP"] * factor).round(2)
 
 # ==============================================================================
-# 5. ENCABEZADO PRINCIPAL Y CINTA DE TASA DE CAMBIO
+# 5. HEADER Y FILTROS INTERACTIVOS
 # ==============================================================================
 st.markdown(f"""
 <div class="header-banner">
-    <h1>📊 Dashboard Financiero Ejecutivo (DOP ⇄ USD)</h1>
-    <p>Consolidación de Balance General y Estado de Resultados conectada en tiempo real a API de Divisas • Tasa actual: <b>US$ 1 = RD$ {tasa_usd_a_dop:,.2f}</b> ({fecha_tasa})</p>
+    <h1>🏛️ Dashboard Financiero Ejecutivo</h1>
+    <p>Consumo de APIs REST en Vivo + Integración Continua con Excel desde GitHub + Analítica Multimoneda</p>
 </div>
 """, unsafe_allow_html=True)
 
+# Barra de estado y filtros de página
+col_info1, col_info2, col_info3 = st.columns([2, 1, 1])
+
+with col_info1:
+    st.markdown(f"**Fuente de Datos Activa:** `{etiqueta_fuente}`")
+    st.caption(f"Tasa de Cambio Oficial: **US$ 1.00 = RD$ {tasa_usd_a_rd:,.2f}** | Fecha API: **{fecha_tasa}**")
+
+with col_info2:
+    lista_meses = ["Todos"] + sorted(list(df_resultados["Mes"].unique()))
+    mes_sel = st.selectbox("📅 Filtrar por Mes:", lista_meses, index=0)
+
+with col_info3:
+    lista_lineas = ["Todas"] + sorted(list(df_resultados["Linea_Negocio"].unique()))
+    linea_sel = st.selectbox("🏢 Línea de Negocio:", lista_lineas, index=0)
+
+# Aplicar filtros al Estado de Resultados
+df_er_filt = df_resultados.copy()
+if mes_sel != "Todos":
+    df_er_filt = df_er_filt[df_er_filt["Mes"] == mes_sel]
+if linea_sel != "Todas":
+    df_er_filt = df_er_filt[df_er_filt["Linea_Negocio"] == linea_sel]
+
 # ==============================================================================
-# 6. TARJETAS KPI CON BORDES, COLORES E ICONOS ALUSIVOS
+# 6. CÁLCULO DE TOTALES Y TARJETAS BENTO KPI
 # ==============================================================================
-def render_kpi(col, titulo, valor_str, subtitulo, icono, color_borde):
+# Balance General
+tot_activos = df_balance[df_balance["Categoria"] == "Activos"]["Monto_Mostrar"].sum()
+tot_pasivos = df_balance[df_balance["Categoria"] == "Pasivos"]["Monto_Mostrar"].sum()
+tot_capital = df_balance[df_balance["Categoria"] == "Capital"]["Monto_Mostrar"].sum()
+
+# Estado de Resultados
+tot_ingresos = df_er_filt["Ingresos"].sum()
+tot_costos = df_er_filt["Costos"].sum()
+tot_margen = df_er_filt["Margen_Bruto"].sum()
+pct_margen_global = (tot_margen / tot_ingresos * 100) if tot_ingresos > 0 else 0
+
+def render_kpi(col, titulo, valor, subtitulo, icono="📌", color_borde="#1e3a8a"):
     col.markdown(f"""
     <div class="kpi-card" style="border-left-color: {color_borde};">
         <div class="kpi-title">{icono} {titulo}</div>
-        <div class="kpi-value">{valor_str}</div>
+        <div class="kpi-value">{valor}</div>
         <div class="kpi-sub">{subtitulo}</div>
     </div>
     """, unsafe_allow_html=True)
 
-# Cálculos KPI Balance General
-tot_activos = df_balance.loc[df_balance["Categoria"] == "Activos", "Monto_Mostrar"].sum()
-tot_pasivos = df_balance.loc[df_balance["Categoria"] == "Pasivos", "Monto_Mostrar"].sum()
-tot_capital = df_balance.loc[df_balance["Categoria"] == "Capital", "Monto_Mostrar"].sum()
-
-# Cálculos KPI Estado de Resultados
-tot_ingresos = df_er_filt["Ingresos"].sum()
-tot_costos = df_er_filt["Costos"].sum()
-tot_margen = df_er_filt["Margen_Bruto"].sum()
-pct_margen_global = (tot_margen / tot_ingresos * 100) if tot_ingresos > 0 else 0.0
-
-st.markdown("### 🏦 Indicadores de Situación Financiera (Balance General)")
+st.markdown("### 🏛️ Posición Financiera (Balance General)")
 k1, k2, k3 = st.columns(3)
 render_kpi(k1, "Total Activos", f"{simbolo} {tot_activos:,.2f}", "Recursos y bienes totales", "🏛️", "#2563eb")
 render_kpi(k2, "Total Pasivos", f"{simbolo} {tot_pasivos:,.2f}", f"Endeudamiento: {(tot_pasivos/tot_activos*100):.1f}% de activos", "💳", "#dc2626")
@@ -266,7 +360,6 @@ with tab1:
         "Mes", "Linea_Negocio", "Ingresos", "Costos", "Margen_Bruto", "Porcentaje_Margen", "Gastos_Operativos"
     ]].copy()
 
-    # Función de color semafórico para el % de Margen
     def color_margen(val):
         if val >= 50:
             return "background-color: #dcfce7; color: #166534; font-weight: bold;"

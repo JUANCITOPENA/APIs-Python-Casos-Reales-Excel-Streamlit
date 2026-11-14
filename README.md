@@ -6,8 +6,17 @@
 [![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
 [![Plotly](https://img.shields.io/badge/Plotly-3F4F75?style=for-the-badge&logo=plotly&logoColor=white)](https://plotly.com/)
 [![REST API](https://img.shields.io/badge/API-REST_GET-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://github.com/fawazahmed0/currency-api)
-[![Status](https://img.shields.io/badge/Status-Production_Ready-success?style=for-the-badge)]()
+[![GitHub Sync](https://img.shields.io/badge/Data_Source-GitHub_Live_Excel-10B981?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit/main/estados_financieros_rd.xlsx)
 [![Author](https://img.shields.io/badge/Author-Ing._Juancito_Peña-1E3A8A?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JUANCITOPENA)
+
+---
+
+## 🏛️ Arquitectura Central del Proyecto
+
+<div align="center">
+  <img src="arquitectura_api_resiliente.png" alt="Arquitectura API Resiliente: Flujo y Caché Offline" width="100%" style="border-radius: 12px; border: 2.5px solid #000000; box-shadow: 6px 6px 0px #000000;" />
+  <p><em><strong>Figura Principal:</strong> Arquitectura API Resiliente: Flujo de peticiones HTTPS (GET), balanceo de carga mediante CDN global (jsDelivr / Cloudflare), procesamiento en memoria con Pandas y contingencia de caché offline.</em></p>
+</div>
 
 ---
 
@@ -15,7 +24,7 @@
 
 En el desarrollo de software y la ingeniería de datos moderna, **el consumo de APIs es la columna vertebral de la interoperabilidad**. Las organizaciones no operan con datos aislados; requieren conectar fuentes locales y sistemas heredados (como hojas de cálculo en **Excel**) con servicios en la nube en tiempo real (tasas de cambio, inflación, cotizaciones bursátiles o microservicios empresariales).
 
-Este repositorio constituye un **manual de ingeniería y suite práctica completa** diseñada con arquitectura de grado productivo. Presenta **tres niveles progresivos de implementación** que abarcan desde el consumo elemental de una API pública hasta la construcción y despliegue de una plataforma web interactiva de Inteligencia de Negocios (**BI**) desplegada en la nube con **Streamlit Community Cloud**.
+Este repositorio constituye un **manual de ingeniería y suite práctica completa** diseñada con arquitectura de grado productivo. Presenta **tres niveles progresivos de implementación** que abarcan desde el consumo elemental de una API pública hasta la construcción y despliegue de una plataforma web interactiva de Inteligencia de Negocios (**BI**) desplegada en la nube con **Streamlit Community Cloud**, alimentada de forma continua por un archivo **Excel sincronizado en vivo desde GitHub**.
 
 ---
 
@@ -29,7 +38,7 @@ Una **API** (*Application Programming Interface* o Interfaz de Programación de 
 ### 2.2. Tipo de API Utilizada en este Proyecto: RESTful JSON API
 * **Arquitectura REST (*Representational State Transfer*):** Se rige por los principios de arquitectura sin estado (*Stateless*), donde cada petición enviada desde nuestro script de Python contiene toda la información necesaria para que el servidor responda de manera independiente.
 * **Formato de Entrega JSON (*JavaScript Object Notation*):** El servidor entrega los datos en un formato estándar ligero compuesto por pares clave-valor y arreglos, directamente mapeable a los diccionarios (`dict`) y listas (`list`) de Python.
-* **Modelo sin Autenticación (*No-Auth / Public API*):** La API utilizada está diseñada para alta disponibilidad pública sin fricción de llaves API (*API Keys*), ideal para entornos educativos, dashboards financieros y microservicios de cotización.
+* **Modelo sin Autenticación (*No-Auth / Public API*):** La API de divisas utilizada está diseñada para alta disponibilidad pública sin fricción de llaves API (*API Keys*), ideal para entornos educativos, dashboards financieros y microservicios de cotización.
 
 ### 2.3. Protocolo de Comunicación: HTTP / HTTPS
 La transferencia de datos se realiza sobre el protocolo **HTTPS** (*Hypertext Transfer Protocol Secure*), el cual opera sobre el puerto estándar **443** cifrado mediante **TLS/SSL**. Esto asegura que las peticiones entre nuestra máquina (o el servidor en la nube de Streamlit) y los nodos de la API viajen de forma segura, íntegra e inmutable.
@@ -47,7 +56,7 @@ En la arquitectura REST, los verbos HTTP definen la acción semántica que se de
 | **`DELETE`** | Delete (Eliminación) | Sí | No | Borrar permanentemente un recurso alojado en el servidor. | ❌ No requerido |
 
 > 💡 **¿Por qué usamos exclusivamente `GET` en este proyecto?**  
-> Porque el objetivo de una aplicación de consulta financiera es **leer indicadores oficiales** (cotizaciones de divisas) de forma confiable, repetible y rápida. La naturaleza **segura e idempotente** del verbo `GET` permite además que las redes de distribución de contenido (**CDN**) almacenen las respuestas en memoria caché distribuida, reduciendo los tiempos de respuesta a milisegundos.
+> Porque el objetivo de una aplicación de consulta financiera es **leer indicadores oficiales** (cotizaciones de divisas y libros contables) de forma confiable, repetible y rápida. La naturaleza **segura e idempotente** del verbo `GET` permite además que las redes de distribución de contenido (**CDN**) almacenen las respuestas en memoria caché distribuida, reduciendo los tiempos de respuesta a milisegundos.
 
 ### 2.5. Códigos de Estado HTTP Manejados
 
@@ -65,51 +74,66 @@ El código de Python implementa manejo defensivo de respuestas de red:
 └─────────────────┴────────────────────────────────────────────────────────┘
 ```
 
-### 2.6. Arquitectura de Alta Disponibilidad y Resiliencia (Redundancia CDN)
-Para evitar que el dashboard colapse ante caídas de proveedores de red, el código implementa un **patrón de redundancia con fallback**:
-
-```mermaid
-flowchart LR
-    A["Cliente Python / Streamlit"] -->|"1. Intento GET"| B["Nodo Primario: jsDelivr CDN"]
-    B -->|"200 OK"| D["JSON Recibido con Éxito"]
-    B -.->|"Falla / Timeout"| C["Nodo Secundario: Cloudflare Pages"]
-    C -->|"200 OK"| D
-    C -.->|"Falla Red Local"| E["Caché / Tasa de Emergencia Offline"]
-```
-
 ---
 
-## 🚀 3. Tres Casos de Uso Reales y Productivos
+## 🚀 3. Tres Casos de Uso Reales y Productivos (Con Resultados Reales)
 
 El repositorio organiza el aprendizaje y la ejecución en tres niveles progresivos:
 
 ### 🔹 Nivel 1: Monitor de Divisas Multimoneda en Tiempo Real (`divisas.py`)
-* **Propósito:** Conectar a la API, extraer las tasas del Peso Dominicano (**DOP**), invertir la tasa matemática (`1 / tasa`) para obtener el costo en RD$ de las principales 10 monedas internacionales (USD, EUR, GBP, CHF, CAD, AUD, JPY, CNY, MXN, SGD) y presentarlas ordenadas de mayor a menor valor en la consola.
+* **Propósito:** Conectar a la API, extraer las tasas del Peso Dominicano (**DOP**), invertir la tasa matemática (`1 / tasa`) para calcular el costo en RD$ de las principales 10 monedas internacionales (USD, EUR, GBP, CHF, CAD, AUD, JPY, CNY, MXN, SGD) y presentarlas ordenadas de mayor a menor valor en la consola.
 * **Componentes clave:** Petición HTTP resiliente con `requests`, manejo de excepciones `RequestException`, bucle iterativo de respaldo y ordenamiento de tuplas en Python.
+
+<div align="center">
+  <img src="resultado_proyecto1_divisas.png" alt="Resultado Proyecto 1: Monitor de Divisas" width="92%" style="border-radius: 10px; border: 2px solid #000000; box-shadow: 5px 5px 0px #000000; margin: 15px 0;" />
+  <p><em><strong>Figura 1:</strong> Ejecución real en terminal de <code>divisas.py</code> mostrando el tipo de cambio oficial ordenado de mayor a menor frente al Peso Dominicano.</em></p>
+</div>
+
+---
 
 ### 🔹 Nivel 2: Pipeline ETL Híbrido Contable: Excel + API Divisas (`estados_financieros_rd.py`)
 * **Propósito:** Integrar una fuente de datos corporativa estática (**Microsoft Excel**) con un servicio web en vivo (**API REST**).
 * **Solución a problema real de ingeniería de datos:** Cuando un archivo `.xlsx` contiene fórmulas generadas por software, las celdas carecen de valores en caché si no se abrieron previamente en la aplicación de escritorio de Excel, arrojando valores `NaN` (*Not a Number*) en Pandas. Este script recalcula los márgenes brutos y porcentajes directamente en memoria y convierte Balance General y Estado de Resultados de **DOP** a **USD** con precisión de 2 decimales.
 
-### 🔹 Nivel 3: Dashboard Ejecutivo de Business Intelligence (`app.py` / `estados_financieros_rd_Stramlit.py`)
-* **Propósito:** Aplicación Web analítica completa lista para producción y despliegue en la nube.
+<div align="center">
+  <img src="resultado_proyecto2_etl_excel.png" alt="Resultado Proyecto 2: Pipeline ETL Excel + API" width="92%" style="border-radius: 10px; border: 2px solid #000000; box-shadow: 5px 5px 0px #000000; margin: 15px 0;" />
+  <p><em><strong>Figura 2:</strong> Ejecución real en terminal de <code>estados_financieros_rd.py</code> procesando el Balance General y Estado de Resultados convertidos de DOP a USD.</em></p>
+</div>
+
+---
+
+### 🔹 Nivel 3: Dashboard Ejecutivo Sincronizado en Vivo con GitHub (`app.py` / `estados_financieros_rd_Streamlit_GitHub.py`)
+* **Propósito:** Aplicación Web analítica completa lista para producción y despliegue en la nube, con **consumo en tiempo real del archivo Excel alojado en el repositorio de GitHub**.
+* **Arquitectura de Sincronización Continua con GitHub:**
+  * El dashboard descarga automáticamente la última versión del archivo `estados_financieros_rd.xlsx` directamente desde la URL Raw de GitHub:  
+    `https://raw.githubusercontent.com/JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit/main/estados_financieros_rd.xlsx`
+  * Incorpora parámetros **anticaché de CDN** (`?v=timestamp`) y caché reactiva `@st.cache_data(ttl=60)`.
+  * **Actualización en Caliente:** Si subes una nueva versión del Excel a GitHub (con más meses, líneas de negocio o cuentas), Streamlit detectará los nuevos datos automáticamente o al presionar el botón **"🔄 Refrescar datos desde GitHub"**, sin necesidad de reiniciar el servidor.
 * **Características:**
   1. **Lienzo Ejecutivo con Estilo Bento:** Tarjetas KPI con bordes reforzados, sombra física y acento cromático lateral azul, verde y rojo.
-  2. **Conmutador Multimoneda Dinámico:** Selector en tiempo real entre **Pesos Dominicanos (RD$)** y **Dólares Estadounidenses (US$)** que recalcula instantáneamente todas las tarjetas, gráficos y tablas.
-  3. **Visualizaciones Interactivas con Plotly:**
-     * *Evolución Mensual agrupada:* Ingresos vs. Costos vs. Margen Bruto.
-     * *Composición del Balance:* Donut Chart proporcional de Activos, Pasivos y Capital.
+  2. **Conmutador Multimoneda Dinámico:** Selector en tiempo real entre **Pesos Dominicanos (RD$)** y **Dólares Estadounidenses (US$)**.
+  3. **Visualizaciones Interactivas con Plotly:** Gráficos de barras agrupadas y gráfico donut de composición del balance.
   4. **Tablas Financieras Semafóricas:** Formato condicional de celdas con semáforo verde (Margen ≥ 50%), amarillo (40% - 49%) y rojo (< 40%).
-  5. **Cargador de Archivos en Caliente:** Permite al usuario arrastrar su propio archivo Excel de estados financieros y analizarlo al instante.
-  6. **Optimización con `@st.cache_data`:** Consulta la API con caducidad controlada (*TTL*) de 1 hora para evitar consumo innecesario de ancho de banda.
+  5. **Selector de Fuente Flexible:** Permite alternar entre **GitHub Live**, **Subida manual de archivo (.xlsx)** y **Archivo Local de respaldo**.
+
+<div align="center">
+  <img src="resultado_proyecto3_dashboard_streamlit.png" alt="Resultado Proyecto 3: Dashboard Streamlit en Vivo" width="98%" style="border-radius: 12px; border: 2.5px solid #000000; box-shadow: 6px 6px 0px #000000; margin: 15px 0;" />
+  <p><em><strong>Figura 3:</strong> Interfaz del Dashboard Ejecutivo en Streamlit funcionando en vivo: Tarjetas Bento, Gráficos Plotly, Tablas con formato condicional y selector de moneda DOP / USD sincronizado con GitHub.</em></p>
+</div>
 
 ---
 
 ## 📂 4. Estructura del Repositorio
 
 ```text
-├── app.py                                                   # Punto de entrada estándar para Streamlit Community Cloud
-├── estados_financieros_rd_Stramlit.py                       # Código fuente del Dashboard interactivo
+├── Arquitectura API resiliente_ Flujo y caché offline.png   # Imagen original de arquitectura del proyecto
+├── arquitectura_api_resiliente.png                          # Imagen central de arquitectura para visualización web
+├── resultado_proyecto1_divisas.png                          # Captura del resultado del Proyecto 1 (Consola)
+├── resultado_proyecto2_etl_excel.png                        # Captura del resultado del Proyecto 2 (Consola ETL)
+├── resultado_proyecto3_dashboard_streamlit.png              # Captura del Dashboard interactivo en Streamlit
+├── app.py                                                   # Punto de entrada para Streamlit Community Cloud (GitHub Sync)
+├── estados_financieros_rd_Streamlit_GitHub.py               # Versión del dashboard con consumo directo desde GitHub
+├── estados_financieros_rd_Stramlit.py                       # Código original del Dashboard interactivo
 ├── estados_financieros_rd.py                                # Pipeline ETL de consola (Excel + API)
 ├── divisas.py                                               # Script de consumo directo de API de divisas
 ├── estados_financieros_rd.xlsx                              # Libro contable maestro con Balance y Resultados

@@ -1,5 +1,5 @@
 # 📘 Manual Maestro: Creación de Repositorio en GitHub y Despliegue en Streamlit Cloud
-### *Guía Definitiva Paso a Paso: Método Manual (Arrastrar y Soltar), Método por Comandos (Git CLI) y Publicación en la Nube*
+### *Guía Definitiva Paso a Paso: Método Manual (Arrastrar y Soltar), Método por Comandos (Git CLI) y Publicación en la Nube con Sincronización en Vivo de Excel*
 
 [![GitHub](https://img.shields.io/badge/GitHub-Repo_Setup-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/)
 [![Git](https://img.shields.io/badge/Git-CLI_Commands-F05032?style=for-the-badge&logo=git&logoColor=white)](https://git-scm.com/)
@@ -15,6 +15,16 @@ Este manual ha sido elaborado para que cualquier estudiante, desarrollador o ana
    * **Método 1 (Gráfico / Principiantes):** Arrastrar y soltar (*Drag & Drop*) directamente desde el navegador web.
    * **Método 2 (Terminal / Profesional):** Mediante comandos estándar de **Git** en la consola.
 2. Desplegar la aplicación web interactiva en la nube de forma **100% gratuita** utilizando **Streamlit Community Cloud**, dejándola disponible en internet con una URL pública accesible desde cualquier computadora o teléfono móvil.
+3. Configurar la **sincronización en vivo de datos**: cada vez que actualices el libro Excel en GitHub con nuevos registros, Streamlit los consumirá en caliente sin necesidad de reinstalar ni reiniciar la aplicación.
+
+---
+
+## 🏛️ Arquitectura del Flujo de Datos
+
+<div align="center">
+  <img src="arquitectura_api_resiliente.png" alt="Arquitectura del Flujo y Despliegue" width="100%" style="border-radius: 12px; border: 2.5px solid #000000; box-shadow: 6px 6px 0px #000000;" />
+  <p><em><strong>Diagrama de Flujo:</strong> El libro Excel vive en GitHub y es consumido directamente por Streamlit Cloud mediante peticiones HTTP GET, combinándolo con la tasa de divisas en tiempo real.</em></p>
+</div>
 
 ---
 
@@ -49,12 +59,17 @@ Haz clic directamente en el texto azul **"uploading an existing file"**.
 1. Abre el **Explorador de Archivos de Windows** y navega a la carpeta de tu proyecto:
    `C:\Users\User\Desktop\USO DE API CON PYTHON, REPO EXCEL EN GITHUB  + DASHBOARD EN STREAMLIT`
 2. Selecciona los siguientes archivos clave:
-   * ✅ `app.py`
-   * ✅ `estados_financieros_rd_Stramlit.py`
-   * ✅ `estados_financieros_rd.py`
-   * ✅ `divisas.py`
-   * ✅ `estados_financieros_rd.xlsx`
-   * ✅ `requirements.txt`
+   * ✅ `app.py` *(Dashboard principal con sincronización viva a GitHub)*
+   * ✅ `estados_financieros_rd_Streamlit_GitHub.py` *(Versión especializada en consumo desde GitHub)*
+   * ✅ `estados_financieros_rd_Stramlit.py` *(Código base del dashboard)*
+   * ✅ `estados_financieros_rd.py` *(Pipeline ETL de consola)*
+   * ✅ `divisas.py` *(Monitor de tasas de divisas)*
+   * ✅ `estados_financieros_rd.xlsx` *(Libro contable maestro)*
+   * ✅ `requirements.txt` *(Lista de dependencias)*
+   * ✅ `arquitectura_api_resiliente.png` *(Diagrama arquitectónico)*
+   * ✅ `resultado_proyecto1_divisas.png` *(Captura de consola 1)*
+   * ✅ `resultado_proyecto2_etl_excel.png` *(Captura de consola 2)*
+   * ✅ `resultado_proyecto3_dashboard_streamlit.png` *(Captura del dashboard en vivo)*
    * ✅ `README.md`
    * ✅ `MANUAL_CREACION_REPO_Y_DESPLIEGUE.md`
    * ✅ Las guías adicionales con extensión `.md`
@@ -67,11 +82,11 @@ Haz clic directamente en el texto azul **"uploading an existing file"**.
 
 ### Paso 1.5: Guardar el Commit inicial
 1. En la parte inferior de la página, en la sección **"Commit changes"**:
-   * En el título escribe: `feat: carga inicial del ecosistema de APIs, ETL Excel y Streamlit`
-   * En la descripción (opcional): `Incluye scripts de consola, libro contable y app web.`
+   * En el título escribe: `feat: carga de ecosistema de APIs, ETL Excel y Streamlit Cloud sincronizado`
+   * En la descripción (opcional): `Incluye diagramas, capturas de ejecución real y consumo directo desde GitHub.`
 2. Asegúrate de que esté seleccionada la opción **"Commit directly to the main branch"**.
 3. Haz clic en el botón verde **"Commit changes"**.
-4. ¡Listo! En unos segundos verás tu repositorio completamente estructurado con su `README.md` formateado.
+4. ¡Listo! En unos segundos verás tu repositorio completamente estructurado con su `README.md` formateado e imágenes operativas.
 
 ---
 
@@ -149,8 +164,6 @@ git remote add origin https://github.com/JUANCITOPENA/APIs-Python-Casos-Reales-E
 git push -u origin main
 ```
 
-*(Si Git te solicita autenticación, se abrirá una ventana de GitHub para autorizar con un clic mediante el Git Credential Manager de Windows o introduciendo un Personal Access Token).*
-
 ---
 
 ## ☁️ CÓMO PUBLICAR EL DASHBOARD EN STREAMLIT COMMUNITY CLOUD
@@ -187,7 +200,7 @@ Se presentará un formulario con tres casillas obligatorias:
    ```text
    app.py
    ```
-   *(También puedes indicar `estados_financieros_rd_Stramlit.py`, pero `app.py` es el estándar internacional reconocido automáticamente por Streamlit).*
+   *(Tanto `app.py` como `estados_financieros_rd_Streamlit_GitHub.py` contienen la lógica de consumo en vivo desde GitHub).*
 
 4. **App URL (Opcional - Personalización):**
    Puedes hacer clic en *"Advanced settings"* o en el lápiz de edición de la URL para asignarle un nombre personalizado, por ejemplo:
@@ -206,27 +219,22 @@ Haz clic en el botón azul:
    * Puesta en marcha del proceso con `streamlit run app.py`.
 3. En aproximadamente **45 a 90 segundos**, la pantalla cambiará y verás tu **Dashboard Financiero Interactivo** funcionando en vivo.
 
-### Paso 3.6: Compartir tu Dashboard
-* Copia la URL que aparece en la barra de direcciones de tu navegador (ejemplo: `https://tu-usuario-api-rd.streamlit.app`).
-* Esta URL es pública, segura (HTTPS) y accesible desde cualquier navegador web en computadoras, tablets o smartphones.
-
 ---
 
-## 🔄 ¿Cómo Actualizar el Dashboard en el Futuro?
+## 🔄 ¿Cómo Funciona la Sincronización Automática con GitHub?
 
-Una de las grandes ventajas de Streamlit Community Cloud es el **Despliegue Continuo (CI/CD Automático)**:
+El dashboard incorpora un motor de lectura de datos en tiempo real:
 
-* **Si modificas un archivo en tu computadora:**
-  Solo debes hacer commit y push con Git:
-  ```bash
-  git add .
-  git commit -m "update: ajustados indicadores financieros"
-  git push origin main
-  ```
-* **Si usas la web de GitHub:**
-  Solo edita o reemplaza el archivo en la página web de GitHub y guarda el commit.
+```python
+URL_EXCEL_GITHUB = "https://raw.githubusercontent.com/JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit/main/estados_financieros_rd.xlsx"
+```
 
-⚡ **Streamlit Cloud detectará el cambio en GitHub automáticamente y reiniciará la aplicación en cuestión de segundos sin que tengas que hacer nada más.**
+1. **Cada vez que agregas más filas al Excel y haces push a GitHub:**
+   * La versión pública en `raw.githubusercontent.com` se actualiza inmediatamente.
+2. **En Streamlit Cloud:**
+   * La función `descargar_excel_github` tiene un tiempo de vida (*TTL*) de 60 segundos con parámetros anticaché (`?v=timestamp`).
+   * Pasados 60 segundos, o simplemente presionando el botón **"🔄 Refrescar datos desde GitHub"** en la barra lateral, Streamlit purga su memoria caché y recarga los nuevos balances y estados de resultados automáticamente.
+   * **¡Cero necesidad de reiniciar el servidor ni reinstalar dependencias!**
 
 ---
 
