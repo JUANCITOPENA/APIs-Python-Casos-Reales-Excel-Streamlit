@@ -345,9 +345,9 @@ def render_kpi(col, titulo, valor, subtitulo, icono="📌", color_borde="#1e3a8a
 
 st.markdown(f"""
 ### 🏛️ Posición Financiera (Balance General en {codigo_sel})
-<small style='color: #475569; font-weight: 600; display: block; margin-top: -6px; margin-bottom: 12px;'>
+<div style='background-color: #f1f5f9; border-left: 4px solid #2563eb; padding: 8px 14px; border-radius: 6px; color: #1e293b; font-size: 1.02rem; font-weight: 600; margin-top: -4px; margin-bottom: 14px;'>
     📌 <em>Foto patrimonial acumulada a la fecha de corte oficial (31 de Octubre de 2026) · Indicadores estáticos que no varían por mes de ventas.</em>
-</small>
+</div>
 """, unsafe_allow_html=True)
 k1, k2, k3 = st.columns(3)
 render_kpi(k1, "Total Activos", f"{simbolo} {tot_activos:,.2f}", f"Bienes totales ({codigo_sel})", "🏛️", "#2563eb")
@@ -356,9 +356,9 @@ render_kpi(k3, "Total Capital", f"{simbolo} {tot_capital:,.2f}", f"Patrimonio: {
 
 st.markdown(f"""
 ### 📈 Indicadores de Rentabilidad (Estado de Resultados en {codigo_sel})
-<small style='color: #475569; font-weight: 600; display: block; margin-top: -6px; margin-bottom: 12px;'>
+<div style='background-color: #f1f5f9; border-left: 4px solid #059669; padding: 8px 14px; border-radius: 6px; color: #1e293b; font-size: 1.02rem; font-weight: 600; margin-top: -4px; margin-bottom: 14px;'>
     📊 <em>Flujo operativo dinámico · Filtrado actualmente por Mes: <strong>{mes_sel}</strong> y Línea de Negocio: <strong>{linea_sel}</strong>.</em>
-</small>
+</div>
 """, unsafe_allow_html=True)
 r1, r2, r3, r4 = st.columns(4)
 render_kpi(r1, "Ingresos Totales", f"{simbolo} {tot_ingresos:,.2f}", f"Ventas del período ({codigo_sel})", "💰", "#0284c7")
