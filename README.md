@@ -7,6 +7,7 @@
 [![Plotly](https://img.shields.io/badge/Plotly-3F4F75?style=for-the-badge&logo=plotly&logoColor=white)](https://plotly.com/)
 [![REST API](https://img.shields.io/badge/API-REST_GET-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://github.com/fawazahmed0/currency-api)
 [![GitHub Sync](https://img.shields.io/badge/Data_Source-GitHub_Live_Excel-10B981?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit/main/estados_financieros_rd.xlsx)
+[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit&branch=main&mainModule=app.py)
 [![Author](https://img.shields.io/badge/Author-Ing._Juancito_Peña-1E3A8A?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JUANCITOPENA)
 
 ---
@@ -190,8 +191,22 @@ pip install -r requirements.txt
 
 ## ☁️ 6. Despliegue en la Nube (Streamlit Community Cloud)
 
-El proyecto está 100% preparado para ser desplegado gratis en la nube con un solo clic. Consulta el manual complementario:
-👉 **[MANUAL_CREACION_REPO_Y_DESPLIEGUE.md](MANUAL_CREACION_REPO_Y_DESPLIEGUE.md)** para conocer las instrucciones detalladas con el método de arrastrar y soltar, comandos de Git y configuración en Streamlit Cloud.
+Puedes publicar este Dashboard en la nube de forma **100% gratuita y en un solo clic** utilizando el siguiente enlace directo oficial de Streamlit:
+
+<div align="center">
+  <a href="https://share.streamlit.io/deploy?repository=JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit&branch=main&mainModule=app.py" target="_blank">
+    <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Deploy to Streamlit Cloud" width="220" />
+  </a>
+  <p>🚀 <strong>Enlace Directo de Despliegue Automatizado (1 Clic):</strong><br>
+  <a href="https://share.streamlit.io/deploy?repository=JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit&branch=main&mainModule=app.py" target="_blank">
+    <strong>https://share.streamlit.io/deploy?repository=JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit&branch=main&mainModule=app.py</strong>
+  </a></p>
+</div>
+
+Al hacer clic en el botón o enlace anterior, Streamlit Community Cloud abrirá automáticamente el panel con el repositorio (`JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit`), la rama (`main`) y el archivo de entrada (`app.py`) ya configurados, dejándote a solo un clic de presionar **"Deploy!"**.
+
+Para el paso a paso detallado y el método alternativo, consulta el manual complementario:  
+👉 **[MANUAL_CREACION_REPO_Y_DESPLIEGUE.md](MANUAL_CREACION_REPO_Y_DESPLIEGUE.md)**
 
 ---
 

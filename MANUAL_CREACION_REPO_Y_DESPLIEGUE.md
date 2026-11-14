@@ -4,6 +4,7 @@
 [![GitHub](https://img.shields.io/badge/GitHub-Repo_Setup-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/)
 [![Git](https://img.shields.io/badge/Git-CLI_Commands-F05032?style=for-the-badge&logo=git&logoColor=white)](https://git-scm.com/)
 [![Streamlit Cloud](https://img.shields.io/badge/Streamlit_Cloud-Deploy_24%2F7-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://share.streamlit.io/)
+[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit&branch=main&mainModule=app.py)
 [![Author](https://img.shields.io/badge/Author-Ing._Juancito_Peña-1E3A8A?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JUANCITOPENA)
 
 ---
@@ -169,6 +170,26 @@ git push -u origin main
 ## ☁️ CÓMO PUBLICAR EL DASHBOARD EN STREAMLIT COMMUNITY CLOUD
 
 Una vez que tu repositorio está subido en GitHub, el despliegue en la nube toma menos de 2 minutos y es totalmente gratuito.
+
+### ⚡ Opción A (Recomendada): Enlace Directo de 1 Solo Clic (Pre-Configurado)
+
+Puedes usar el enlace de despliegue directo oficial de Streamlit, el cual ya tiene todos los parámetros de tu repositorio precargados:
+
+<div align="center">
+  <a href="https://share.streamlit.io/deploy?repository=JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit&branch=main&mainModule=app.py" target="_blank">
+    <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Deploy to Streamlit Cloud" width="230" />
+  </a>
+  <p>🔗 <strong>URL de Despliegue Directo:</strong><br>
+  <a href="https://share.streamlit.io/deploy?repository=JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit&branch=main&mainModule=app.py" target="_blank">
+    <strong>https://share.streamlit.io/deploy?repository=JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit&branch=main&mainModule=app.py</strong>
+  </a></p>
+</div>
+
+*(Al abrir el enlace, Streamlit reconocerá automáticamente el repositorio, rama y archivo ejecutable, por lo que solo tendrás que presionar el botón azul **"Deploy!"**).*
+
+---
+
+### 📋 Opción B: Configuración Manual Paso a Paso
 
 ### Paso 3.1: Entrar a Streamlit Community Cloud
 1. Abre tu navegador y dirígete a: [https://share.streamlit.io](https://share.streamlit.io).
