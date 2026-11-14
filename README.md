@@ -14,7 +14,7 @@
 ## 🏛️ Arquitectura Central del Proyecto
 
 <div align="center">
-  <img src="arquitectura_api_resiliente.png" alt="Arquitectura API Resiliente: Flujo y Caché Offline" width="100%" style="border-radius: 12px; border: 2.5px solid #000000; box-shadow: 6px 6px 0px #000000;" />
+  <img src="arquitectura_api_resiliente.png" alt="Arquitectura API Resiliente: Flujo y Caché Offline" width="100%" />
   <p><em><strong>Figura Principal:</strong> Arquitectura API Resiliente: Flujo de peticiones HTTPS (GET), balanceo de carga mediante CDN global (jsDelivr / Cloudflare), procesamiento en memoria con Pandas y contingencia de caché offline.</em></p>
 </div>
 
@@ -62,17 +62,13 @@ En la arquitectura REST, los verbos HTTP definen la acción semántica que se de
 
 El código de Python implementa manejo defensivo de respuestas de red:
 
-```text
-┌─────────────────┬────────────────────────────────────────────────────────┐
-│ Código HTTP     │ Significado y Comportamiento en la Aplicación          │
-├─────────────────┼────────────────────────────────────────────────────────┤
-│ 200 OK          │ Petición exitosa. El JSON es parseado y procesado.     │
-│ 404 Not Found   │ La divisa o el endpoint no existe en la ruta.          │
-│ 429 Too Many    │ Límite de tasa excedido (mitigado por el uso de CDN).  │
-│ 500 / 502 / 503 │ Error de servidor (activador automático de Fallback).  │
-│ Timeout         │ Red bloqueada o caída (activa servidor alternativo).   │
-└─────────────────┴────────────────────────────────────────────────────────┘
-```
+| Código HTTP | Significado | Comportamiento en la Aplicación |
+| :---: | :---: | :--- |
+| **`200 OK`** | Petición exitosa | El JSON es deserializado y los datos se procesan en memoria. |
+| **`404 Not Found`** | Recurso no encontrado | Se activa el intento con el endpoint espejo alternativo. |
+| **`429 Too Many Requests`** | Límite de peticiones | Mitigado por el uso de CDN de alto rendimiento sin cuota restrictiva. |
+| **`500 / 502 / 503`** | Fallo del servidor remoto | Activa inmediatamente el switch al servidor secundario en Cloudflare. |
+| **`Timeout`** | Sin conexión de red | El sistema captura la excepción y aplica la tasa de contingencia offline. |
 
 ---
 
@@ -85,7 +81,7 @@ El repositorio organiza el aprendizaje y la ejecución en tres niveles progresiv
 * **Componentes clave:** Petición HTTP resiliente con `requests`, manejo de excepciones `RequestException`, bucle iterativo de respaldo y ordenamiento de tuplas en Python.
 
 <div align="center">
-  <img src="resultado_proyecto1_divisas.png" alt="Resultado Proyecto 1: Monitor de Divisas" width="92%" style="border-radius: 10px; border: 2px solid #000000; box-shadow: 5px 5px 0px #000000; margin: 15px 0;" />
+  <img src="resultado_proyecto1_divisas.png" alt="Resultado Proyecto 1: Monitor de Divisas" width="92%" />
   <p><em><strong>Figura 1:</strong> Ejecución real en terminal de <code>divisas.py</code> mostrando el tipo de cambio oficial ordenado de mayor a menor frente al Peso Dominicano.</em></p>
 </div>
 
@@ -96,7 +92,7 @@ El repositorio organiza el aprendizaje y la ejecución en tres niveles progresiv
 * **Solución a problema real de ingeniería de datos:** Cuando un archivo `.xlsx` contiene fórmulas generadas por software, las celdas carecen de valores en caché si no se abrieron previamente en la aplicación de escritorio de Excel, arrojando valores `NaN` (*Not a Number*) en Pandas. Este script recalcula los márgenes brutos y porcentajes directamente en memoria y convierte Balance General y Estado de Resultados de **DOP** a **USD** con precisión de 2 decimales.
 
 <div align="center">
-  <img src="resultado_proyecto2_etl_excel.png" alt="Resultado Proyecto 2: Pipeline ETL Excel + API" width="92%" style="border-radius: 10px; border: 2px solid #000000; box-shadow: 5px 5px 0px #000000; margin: 15px 0;" />
+  <img src="resultado_proyecto2_etl_excel.png" alt="Resultado Proyecto 2: Pipeline ETL Excel + API" width="92%" />
   <p><em><strong>Figura 2:</strong> Ejecución real en terminal de <code>estados_financieros_rd.py</code> procesando el Balance General y Estado de Resultados convertidos de DOP a USD.</em></p>
 </div>
 
@@ -117,7 +113,7 @@ El repositorio organiza el aprendizaje y la ejecución en tres niveles progresiv
   5. **Selector de Fuente Flexible:** Permite alternar entre **GitHub Live**, **Subida manual de archivo (.xlsx)** y **Archivo Local de respaldo**.
 
 <div align="center">
-  <img src="resultado_proyecto3_dashboard_streamlit.png" alt="Resultado Proyecto 3: Dashboard Streamlit en Vivo" width="98%" style="border-radius: 12px; border: 2.5px solid #000000; box-shadow: 6px 6px 0px #000000; margin: 15px 0;" />
+  <img src="resultado_proyecto3_dashboard_streamlit.png" alt="Resultado Proyecto 3: Dashboard Streamlit en Vivo" width="98%" />
   <p><em><strong>Figura 3:</strong> Interfaz del Dashboard Ejecutivo en Streamlit funcionando en vivo: Tarjetas Bento, Gráficos Plotly, Tablas con formato condicional y selector de moneda DOP / USD sincronizado con GitHub.</em></p>
 </div>
 
@@ -200,152 +196,121 @@ El proyecto está 100% preparado para ser desplegado gratis en la nube con un so
 ---
 
 <!-- =========================================================================
-     SECCIÓN: BIOGRAFÍA PROFESIONAL, FILOSOFÍA & STACK TÉCNICO (ING. JUANCITO PEÑA)
+     SECCIÓN OFICIAL: BIOGRAFÍA PROFESIONAL, STACK Y FOOTER INSTITUCIONAL JPV
 ========================================================================== -->
-<div align="center" style="margin-top: 40px; margin-bottom: 20px;">
-  <hr style="border: 2px solid #000000; margin-bottom: 30px;" />
-</div>
 
-<div style="background: #FFFFFF; border: 2.5px solid #000000; border-radius: 14px; padding: 2rem; box-shadow: 6px 6px 0px #000000; margin-bottom: 2rem;">
-  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 2rem;">
-    
-    <!-- LATERAL IZQUIERDO: BIOGRAFÍA, FILOSOFÍA Y DOCENCIA -->
-    <div style="flex: 1 1 480px;">
-      
-      <!-- Encabezado con Avatar Oficial y Badges -->
-      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-        <img 
-          src="https://avatars.githubusercontent.com/u/38921558?v=4" 
-          alt="Ing. Juancito Peña Vizcaíno" 
-          style="width: 86px; height: 86px; object-fit: cover; border-radius: 50%; border: 2.5px solid #000000; box-shadow: 3px 3px 0px #000000; flex-shrink: 0;"
-        >
-        <div>
-          <h3 style="color: #000000; font-weight: 800; margin: 0 0 6px 0;">Ing. Juancito Peña Vizcaíno</h3>
-          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-            <span style="background: #000000; color: #FFFFFF; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold;">Data Analyst</span>
-            <span style="background: #DA291C; color: #FFFFFF; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold;">Full Stack Dev</span>
-            <span style="background: #0D6EFD; color: #FFFFFF; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold;">AI &amp; API Expert</span>
-            <span style="background: #FFC107; color: #000000; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold;">Líder I+D+i</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- PÁRRAFO 1: Trayectoria, Formación y Foco en I+D+i -->
-      <p style="color: #0F172A; font-weight: 500; line-height: 1.65; margin-bottom: 0.75rem;">
-        <strong>Ingeniero en Sistemas y Computación</strong> con Postgrado en <strong>Ingeniería de Software</strong> y Maestría en <strong>Sistemas Mención Gerencial</strong> (<em>Universidad Dominicana O&amp;M</em>). Con más de <strong>15 años de trayectoria</strong>, transformo problemas de alta complejidad en soluciones escalables. Durante el último año, he centrado mi trabajo en <strong>I+D+i (Investigación, Desarrollo e Innovación)</strong>, explorando arquitecturas de <strong>IA Generativa (RAG / LLMs)</strong>, integración de agentes autónomos con bases de datos y orquestación de APIs empresariales.
-      </p>
+<table width="100%" cellpadding="12" cellspacing="0" style="border: 2px solid #000000; border-collapse: collapse; background-color: #FFFFFF;">
+<tr>
+<td width="58%" valign="top" style="border-right: 1.5px solid #000000; padding: 18px;">
 
-      <!-- PÁRRAFO 2: ADN Técnico, Pasión por los Casos de Uso y Docencia Práctica -->
-      <p style="color: #0F172A; font-weight: 500; line-height: 1.65; margin: 0;">
-        🔬 <strong>Mi motor es el aprendizaje a través de los retos:</strong> me apasionan los <em>casos de uso reales</em>, las <strong>pruebas técnicas rigurosas</strong>, la investigación profunda y el diseño de soluciones directas a problemas de ingeniería. 🎓 Como <strong>docente universitario</strong> y creador del canal educativo <strong>@JuancitoDevV</strong>, comparto este conocimiento práctico mediante ejercicios y proyectos de código abierto para acercar la tecnología a problemas reales. 🚀
-      </p>
+<table width="100%" cellpadding="0" cellspacing="0" style="border: none;">
+<tr>
+<td width="95" valign="top">
+  <a href="https://github.com/JUANCITOPENA">
+    <img src="https://avatars.githubusercontent.com/u/38921558?v=4" width="86" height="86" style="border-radius: 50%; border: 2.5px solid #000000;" alt="Ing. Juancito Peña Vizcaíno" />
+  </a>
+</td>
+<td valign="top" style="padding-left: 12px;">
+  <h3 style="margin: 0 0 6px 0; color: #000000;">Ing. Juancito Peña Vizcaíno</h3>
+  <a href="#"><img src="https://img.shields.io/badge/Data_Analyst-000000?style=flat-square&logoColor=white" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/Full_Stack_Dev-DA291C?style=flat-square&logoColor=white" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/AI_%26_API_Expert-0D6EFD?style=flat-square&logoColor=white" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/Líder_I%2BD%2Bi-FFC107?style=flat-square&labelColor=FFC107&color=FFC107&logoColor=black" /></a>
+</td>
+</tr>
+</table>
 
-    </div>
+<p style="color: #0F172A; font-size: 13.5px; line-height: 1.6; margin-top: 14px;">
+<strong>Ingeniero en Sistemas y Computación</strong> con Postgrado en <strong>Ingeniería de Software</strong> y Maestría en <strong>Sistemas Mención Gerencial</strong> (<em>Universidad Dominicana O&M</em>). Con más de <strong>15 años de trayectoria</strong>, transformo problemas de alta complejidad en soluciones escalables. Durante el último año, he centrado mi trabajo en <strong>I+D+i (Investigación, Desarrollo e Innovación)</strong>, explorando arquitecturas de <strong>IA Generativa (RAG / LLMs)</strong>, integración de agentes autónomos con bases de datos y orquestación de APIs empresariales.
+</p>
 
-    <!-- LATERAL DERECHO: STACK VISUAL AGRUPADO & CANALES OFICIALES -->
-    <div style="flex: 1 1 380px;">
-      
-      <div style="margin-bottom: 1.25rem;">
-        <h4 style="font-weight: 800; margin: 0 0 10px 0; color: #000000;">
-          ⚡ Ecosistema de Tecnologías:
-        </h4>
+<p style="color: #0F172A; font-size: 13.5px; line-height: 1.6; margin-bottom: 0;">
+🔬 <strong>Mi motor es el aprendizaje a través de los retos:</strong> me apasionan los <em>casos de uso reales</em>, las <strong>pruebas técnicas rigurosas</strong>, la investigación profunda y el diseño de soluciones directas a problemas de ingeniería. 🎓 Como <strong>docente universitario</strong> y creador del canal educativo <strong><a href="https://www.youtube.com/@JuancitoDevV">@JuancitoDevV</a></strong>, comparto este conocimiento práctico mediante ejercicios y proyectos de código abierto para acercar la tecnología a problemas reales. 🚀
+</p>
 
-        <!-- 1. Frontend & Web -->
-        <div style="margin-bottom: 8px;">
-          <small style="display: block; font-weight: bold; color: #000000; font-size: 0.8rem; margin-bottom: 3px;">🖥️ Frontend &amp; Web:</small>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" width="14" style="vertical-align: middle;"> HTML5</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" width="14" style="vertical-align: middle;"> CSS3</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" width="14" style="vertical-align: middle;"> JavaScript</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="14" style="vertical-align: middle;"> React</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg" width="14" style="vertical-align: middle;"> Next.js</span>
-        </div>
+</td>
+<td width="42%" valign="top" style="padding: 18px;">
 
-        <!-- 2. Backend & Multiplataforma -->
-        <div style="margin-bottom: 8px;">
-          <small style="display: block; font-weight: bold; color: #000000; font-size: 0.8rem; margin-bottom: 3px;">⚙️ Backend &amp; Multiplataforma:</small>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/csharp/csharp-original.svg" width="14" style="vertical-align: middle;"> C#</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/dot-net/dot-net-original.svg" width="14" style="vertical-align: middle;"> .NET / MAUI</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="14" style="vertical-align: middle;"> Python</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg" width="14" style="vertical-align: middle;"> PHP</span>
-        </div>
+<h4 style="margin: 0 0 10px 0; color: #000000;">⚡ Ecosistema de Tecnologías:</h4>
 
-        <!-- 3. Datos & Analítica -->
-        <div style="margin-bottom: 8px;">
-          <small style="display: block; font-weight: bold; color: #000000; font-size: 0.8rem; margin-bottom: 3px;">📊 Data Analytics &amp; Bases de Datos:</small>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/microsoftsqlserver/microsoftsqlserver-plain.svg" width="14" style="vertical-align: middle;"> SQL Server</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="14" style="vertical-align: middle;"> PostgreSQL</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" width="14" style="vertical-align: middle;"> MySQL</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;">📊 Power BI / DAX</span>
-        </div>
+<p style="margin: 0 0 8px 0; font-size: 12.5px; line-height: 1.5;">
+<strong>🖥️ Frontend & Web:</strong><br>
+<code>HTML5</code> • <code>CSS3</code> • <code>JavaScript</code> • <code>React</code> • <code>Next.js</code><br>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" width="18" height="18" alt="HTML5"/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" width="18" height="18" alt="CSS3"/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" width="18" height="18" alt="JavaScript"/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="18" height="18" alt="React"/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg" width="18" height="18" alt="Next.js"/>
+</p>
 
-        <!-- 4. IA, APIs & Cloud -->
-        <div>
-          <small style="display: block; font-weight: bold; color: #000000; font-size: 0.8rem; margin-bottom: 3px;">🤖 IA + APIs &amp; Despliegue (I+D+i):</small>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;">🔌 APIs REST</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;">🧠 IA + LLMs (RAG)</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;">🤖 Agentes IA</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" width="14" style="vertical-align: middle;"> Git</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" width="14" style="vertical-align: middle;"> GitHub</span>
-          <span style="display: inline-block; background: #FFFFFF; border: 1.5px solid #000000; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; margin: 2px; box-shadow: 2px 2px 0 #000000;">▲ Vercel</span>
-        </div>
-      </div>
+<p style="margin: 0 0 8px 0; font-size: 12.5px; line-height: 1.5;">
+<strong>⚙️ Backend & Multiplataforma:</strong><br>
+<code>C#</code> • <code>.NET / MAUI</code> • <code>Python</code> • <code>PHP</code><br>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/csharp/csharp-original.svg" width="18" height="18" alt="C#"/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/dot-net/dot-net-original.svg" width="18" height="18" alt=".NET"/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="18" height="18" alt="Python"/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg" width="18" height="18" alt="PHP"/>
+</p>
 
-      <!-- Redes Sociales Oficiales -->
-      <div>
-        <h5 style="font-weight: 800; margin: 0 0 8px 0; color: #000000;">Canales Oficiales &amp; Redes:</h5>
-        
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-          <a href="https://www.linkedin.com/in/juancitope%C3%B1a/" target="_blank" style="width: 42px; height: 42px; background: #FFFFFF; border: 2px solid #000000; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 3px 3px 0px #000000; text-decoration: none;" title="LinkedIn Oficial" rel="noopener noreferrer">
-            🔗
-          </a>
-          <a href="https://www.youtube.com/@JuancitoDevV" target="_blank" style="width: 42px; height: 42px; background: #FFFFFF; border: 2px solid #000000; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 3px 3px 0px #000000; text-decoration: none;" title="YouTube @JuancitoDevV" rel="noopener noreferrer">
-            📺
-          </a>
-          <a href="https://github.com/JUANCITOPENA" target="_blank" style="width: 42px; height: 42px; background: #FFFFFF; border: 2px solid #000000; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 3px 3px 0px #000000; text-decoration: none;" title="GitHub @JUANCITOPENA" rel="noopener noreferrer">
-            🐙
-          </a>
-          <a href="https://twitter.com/JuancitoPenaV" target="_blank" style="width: 42px; height: 42px; background: #FFFFFF; border: 2px solid #000000; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 3px 3px 0px #000000; text-decoration: none;" title="X (Twitter) @JuancitoPenaV" rel="noopener noreferrer">
-            🐦
-          </a>
-          <a href="mailto:juancito.pena@gmail.com" style="width: 42px; height: 42px; background: #FFFFFF; border: 2px solid #000000; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 3px 3px 0px #000000; text-decoration: none;" title="Correo Electrónico">
-            ✉️
-          </a>
-        </div>
+<p style="margin: 0 0 8px 0; font-size: 12.5px; line-height: 1.5;">
+<strong>📊 Data Analytics & Bases de Datos:</strong><br>
+<code>SQL Server</code> • <code>PostgreSQL</code> • <code>MySQL</code> • <code>Power BI</code><br>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/microsoftsqlserver/microsoftsqlserver-plain.svg" width="18" height="18" alt="SQL Server"/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="18" height="18" alt="PostgreSQL"/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" width="18" height="18" alt="MySQL"/>
+📊
+</p>
 
-        <!-- Tarjeta Promocional de YouTube -->
-        <div style="padding: 10px 14px; background: #FFFFFF; border: 2px solid #000000; border-radius: 8px; box-shadow: 3px 3px 0px #000000;">
-          <small style="display: block; font-weight: bold; color: #DC2626;">Canal Educativo de YouTube:</small>
-          <a href="https://www.youtube.com/@JuancitoDevV" target="_blank" style="font-weight: 800; color: #000000; text-decoration: none; font-size: 0.9rem;" rel="noopener noreferrer">
-            ▶️ @JuancitoDevV · Algoritmos, SQL, IA &amp; .NET ↗
-          </a>
-        </div>
+<p style="margin: 0 0 12px 0; font-size: 12.5px; line-height: 1.5;">
+<strong>🤖 IA + APIs & Despliegue (I+D+i):</strong><br>
+<code>APIs REST</code> • <code>LLMs (RAG)</code> • <code>Agentes IA</code> • <code>Git</code> • <code>GitHub</code> • <code>Vercel</code><br>
+🔌 🧠 🤖
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" width="18" height="18" alt="Git"/>
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" width="18" height="18" alt="GitHub"/>
+▲
+</p>
 
-      </div>
+<h4 style="margin: 12px 0 6px 0; color: #000000;">Canales Oficiales & Redes:</h4>
 
-    </div>
+<p style="margin: 0 0 10px 0;">
+  <a href="https://www.linkedin.com/in/juancitope%C3%B1a/"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
+  <a href="https://www.youtube.com/@JuancitoDevV"><img src="https://img.shields.io/badge/YouTube-FF0000?style=flat-square&logo=youtube&logoColor=white" alt="YouTube" /></a>
+  <a href="https://github.com/JUANCITOPENA"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub" /></a>
+  <a href="https://twitter.com/JuancitoPenaV"><img src="https://img.shields.io/badge/Twitter-1DA1F2?style=flat-square&logo=twitter&logoColor=white" alt="Twitter" /></a>
+  <a href="mailto:juancito.pena@gmail.com"><img src="https://img.shields.io/badge/Email-EA4335?style=flat-square&logo=gmail&logoColor=white" alt="Email" /></a>
+</p>
 
-  </div>
-</div>
+<table width="100%" cellpadding="6" cellspacing="0" style="border: 1.5px solid #000000; background-color: #F8FAFC;">
+<tr>
+<td>
+  <small style="color: #DC2626; font-weight: bold; display: block;">Canal Educativo de YouTube:</small>
+  <a href="https://www.youtube.com/@JuancitoDevV" style="font-weight: bold; color: #000000; text-decoration: none; font-size: 13px;">
+    ▶️ @JuancitoDevV · Algoritmos, SQL, IA & .NET ↗
+  </a>
+</td>
+</tr>
+</table>
 
-<!-- =========================================================================
-     FOOTER OFICIAL NEO-BRUTALIST (ING. JUANCITO PEÑA)
-========================================================================== -->
-<footer style="background: #FFFFFF; border-top: 3px solid #000000; padding: 2rem 1.5rem; width: 100%; color: #000000;">
-  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-    <div>
-      <span style="background: #000000; color: #FFFFFF; border: 1.5px solid #000000; padding: 3px 8px; font-size: 0.75rem; font-weight: bold; margin-right: 8px;">PROYECTO OFICIAL JPV</span>
-      <strong>Sistemas, Datos &amp; Arquitectura de Software</strong>
-      <p style="font-size: 0.85rem; margin: 4px 0 0 0; color: #64748B;">
-        Plataforma de grado industrial desarrollada bajo estándares de alto rendimiento, accesibilidad universal y diseño limpio.
-      </p>
-      <p style="font-size: 0.75rem; margin: 6px 0 0 0; color: #475569;">
-        <strong>Aviso Académico &amp; Autoría:</strong> Diseñado, desarrollado y certificado por el <strong>Ing. Juancito Peña Vizcaíno</strong>. Todos los derechos reservados.
-      </p>
-    </div>
-    <div>
-      <a href="#" style="color: #DC2626; font-weight: bold; text-decoration: none; font-size: 0.9rem;">
-        ⬆️ Volver al Inicio
-      </a>
-    </div>
-  </div>
-</footer>
+</td>
+</tr>
+</table>
+
+<table width="100%" cellpadding="12" cellspacing="0" style="border: 2px solid #000000; border-top: none; background-color: #F1F5F9;">
+<tr>
+<td width="75%">
+  <span style="background-color: #000000; color: #FFFFFF; padding: 2px 8px; font-size: 11px; font-weight: bold; margin-right: 8px;">PROYECTO OFICIAL JPV</span>
+  <strong>Sistemas, Datos & Arquitectura de Software</strong>
+  <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569;">
+    Plataforma de grado industrial desarrollada bajo estándares de alto rendimiento, accesibilidad universal y diseño limpio.
+  </p>
+  <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748B;">
+    <strong>Aviso Académico & Autoría:</strong> Diseñado, desarrollado y certificado por el <strong>Ing. Juancito Peña Vizcaíno</strong>. Todos los derechos reservados.
+  </p>
+</td>
+<td width="25%" align="right" valign="middle">
+  <a href="#top" style="color: #DC2626; font-weight: bold; text-decoration: none; font-size: 13px;">
+    ⬆️ Volver al Inicio
+  </a>
+</td>
+</tr>
+</table>
