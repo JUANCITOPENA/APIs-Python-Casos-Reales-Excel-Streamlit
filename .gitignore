@@ -1,0 +1,22 @@
+# Entorno virtual
+venv/
+env/
+.venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+
+# Archivos temporales y de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+
+# IDEs
+.vscode/
+.idea/
