@@ -9,8 +9,8 @@ import time
 # 1. CONFIGURACIÓN DE PÁGINA Y ESTILOS CSS PERSONALIZADOS (BENTO CARDS + BORDES)
 # ==============================================================================
 st.set_page_config(
-    page_title="Dashboard Financiero DOP & USD | Sincronizado con GitHub",
-    page_icon="📊",
+    page_title="Dashboard Financiero Multidivisa | DOP, USD, EUR & Más",
+    page_icon="💱",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -74,17 +74,16 @@ st.markdown("""
         font-size: 0.95rem;
         color: #dbeafe;
     }
-    /* Badge de Fuente Activa */
-    .source-badge {
+    /* Insignias de Divisa */
+    .currency-pill {
         display: inline-block;
-        background-color: #dcfce7;
-        color: #166534;
-        border: 1px solid #86efac;
+        background-color: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
         padding: 4px 10px;
         border-radius: 6px;
-        font-size: 0.80rem;
+        font-size: 0.82rem;
         font-weight: 700;
-        margin-top: 6px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -93,11 +92,33 @@ st.markdown("""
 URL_EXCEL_GITHUB = "https://raw.githubusercontent.com/JUANCITOPENA/APIs-Python-Casos-Reales-Excel-Streamlit/main/estados_financieros_rd.xlsx"
 
 # ==============================================================================
-# 2. FUNCIONES DE EXTRACCIÓN (API DIVISAS + EXCEL DESDE GITHUB / LOCAL) CON CACHÉ
+# 2. CATÁLOGO COMPLETO DE DIVISAS INTERNACIONALES SOPORTADAS
 # ==============================================================================
-@st.cache_data(ttl=3600)
-def obtener_tasa_cambio():
-    """Consulta la API de divisas con respaldo automático y retorna tasa DOP->USD."""
+DICCIONARIO_DIVISAS = {
+    "DOP": {"nombre": "Peso Dominicano (Moneda Base)", "simbolo": "RD$", "icono": "🇩🇴", "tasa_rd": 1.0},
+    "USD": {"nombre": "Dólar Estadounidense", "simbolo": "US$", "icono": "🇺🇸", "tasa_rd": 60.83},
+    "EUR": {"nombre": "Euro", "simbolo": "€", "icono": "🇪🇺", "tasa_rd": 67.27},
+    "GBP": {"nombre": "Libra Esterlina", "simbolo": "£", "icono": "🇬🇧", "tasa_rd": 80.47},
+    "CHF": {"nombre": "Franco Suizo", "simbolo": "CHF ", "icono": "🇨🇭", "tasa_rd": 72.78},
+    "CAD": {"nombre": "Dólar Canadiense", "simbolo": "CA$", "icono": "🇨🇦", "tasa_rd": 42.65},
+    "AUD": {"nombre": "Dólar Australiano", "simbolo": "A$", "icono": "🇦🇺", "tasa_rd": 41.34},
+    "SGD": {"nombre": "Dólar de Singapur", "simbolo": "S$", "icono": "🇸🇬", "tasa_rd": 47.26},
+    "CNY": {"nombre": "Yuan Chino", "simbolo": "CN¥", "icono": "🇨🇳", "tasa_rd": 9.12},
+    "MXN": {"nombre": "Peso Mexicano", "simbolo": "MX$", "icono": "🇲🇽", "tasa_rd": 3.27},
+    "JPY": {"nombre": "Yen Japonés", "simbolo": "¥", "icono": "🇯🇵", "tasa_rd": 0.38},
+    "BRL": {"nombre": "Real Brasileño", "simbolo": "R$", "icono": "🇧🇷", "tasa_rd": 10.78},
+    "COP": {"nombre": "Peso Colombiano", "simbolo": "COL$", "icono": "🇨🇴", "tasa_rd": 0.02},
+}
+
+# ==============================================================================
+# 3. FUNCIONES DE EXTRACCIÓN (API DE TODAS LAS DIVISAS + EXCEL GITHUB)
+# ==============================================================================
+@st.cache_data(ttl=1800)
+def obtener_todas_las_tasas():
+    """
+    Consulta la API gratuita de divisas con respaldo CDN y devuelve el nodo
+    completo de equivalencias de todas las monedas frente al Peso Dominicano (DOP).
+    """
     urls = [
         "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/dop.json",
         "https://latest.currency-api.pages.dev/v1/currencies/dop.json",
@@ -107,13 +128,13 @@ def obtener_tasa_cambio():
             res = requests.get(url, timeout=8)
             if res.status_code == 200:
                 datos = res.json()
-                tasa_dop_usd = datos["dop"]["usd"]
-                fecha_api = datos.get("date", "Actualizada")
-                return tasa_dop_usd, (1 / tasa_dop_usd), fecha_api
+                tasas_dop = datos.get("dop", {})
+                fecha = datos.get("date", "Actualizada")
+                return tasas_dop, fecha, True
         except requests.exceptions.RequestException:
             continue
-    # Respaldo de emergencia si no hay internet
-    return (1 / 60.83), 60.83, "Tasa Referencial (Offline)"
+    # Respaldo si no hay red
+    return {}, "Tasa Referencial (Offline)", False
 
 @st.cache_data(ttl=60)
 def descargar_excel_github(url):
@@ -157,19 +178,51 @@ def procesar_excel(ruta_o_buffer):
     return df_bg, df_er
 
 # ==============================================================================
-# 3. SIDEBAR: CONTROLES, ORIGEN DE DATOS (GITHUB / LOCAL / UPLOAD) Y FILTROS
+# 4. SIDEBAR: SELECTOR MULTIDIVISA (TODOS LOS TIPOS DE CAMBIO) Y FUENTE
 # ==============================================================================
+tasas_api, fecha_api, api_ok = obtener_todas_las_tasas()
+
 with st.sidebar:
     st.markdown("## ⚙️ Panel de Control")
     
-    # Selector de Moneda Principal
-    moneda_vista = st.radio(
-        "💱 Moneda de Visualización:",
-        options=["Pesos Dominicanos (RD$)", "Dólares Estadounidenses (US$)"],
-        index=0
+    st.markdown("### 💱 Divisa de Conversión")
+    st.caption("Selecciona cualquier tipo de cambio para convertir todos los datos financieros:")
+
+    # Construir lista amigable con iconos y nombres
+    opciones_divisas = [
+        f"{info['icono']} {codigo} - {info['nombre']}"
+        for codigo, info in DICCIONARIO_DIVISAS.items()
+    ]
+    
+    seleccion_divisa = st.selectbox(
+        "Convertir datos contables a:",
+        options=opciones_divisas,
+        index=0  # DOP por defecto
     )
-    es_usd = "US$" in moneda_vista
-    simbolo = "US$" if es_usd else "RD$"
+
+    # Extraer código de divisa elegido (ej: USD, EUR, etc.)
+    codigo_sel = seleccion_divisa.split(" ")[1]
+    info_divisa = DICCIONARIO_DIVISAS[codigo_sel]
+    simbolo = info_divisa["simbolo"]
+
+    # Calcular factor de conversión exacto
+    if codigo_sel == "DOP":
+        factor = 1.0
+        tasa_cotizacion_texto = "Moneda Base RD$ (Sin conversión)"
+        valor_uno_en_rd = 1.0
+    else:
+        cod_min = codigo_sel.lower()
+        if cod_min in tasas_api and tasas_api[cod_min] > 0:
+            factor = tasas_api[cod_min]
+            valor_uno_en_rd = 1 / factor
+            tasa_cotizacion_texto = f"1 {codigo_sel} = RD$ {valor_uno_en_rd:,.2f}"
+        else:
+            # Tasa de contingencia si la API no respondió esa moneda específica
+            valor_uno_en_rd = info_divisa["tasa_rd"]
+            factor = 1 / valor_uno_en_rd
+            tasa_cotizacion_texto = f"1 {codigo_sel} = RD$ {valor_uno_en_rd:,.2f} (Referencial)"
+
+    st.info(f"**Cotización Activa:**\n\n`{tasa_cotizacion_texto}`\n\n*Fecha API: {fecha_api}*")
 
     st.divider()
 
@@ -186,19 +239,16 @@ with st.sidebar:
 
     buffer_excel = None
     etiqueta_fuente = ""
-    es_github = False
 
     if opcion_origen == "🌐 GitHub Live (En Tiempo Real)":
         buffer_excel, etiqueta_fuente, exito = descargar_excel_github(URL_EXCEL_GITHUB)
         if exito:
-            st.success("✅ Conectado al repo oficial en GitHub.")
-            st.caption(f"Cada vez que subas cambios a GitHub, Streamlit los reflejará automáticamente.")
+            st.success("✅ Conectado a GitHub (Sincronizado).")
             if st.button("🔄 Refrescar datos desde GitHub"):
                 st.cache_data.clear()
                 st.rerun()
-            es_github = True
         else:
-            st.warning("⚠️ No se pudo descargar desde GitHub. Usando archivo local de respaldo.")
+            st.warning("⚠️ Sin conexión con GitHub. Usando archivo local de respaldo.")
             buffer_excel = "estados_financieros_rd.xlsx"
             etiqueta_fuente = "💻 Archivo Local (Fallback de Emergencia)"
 
@@ -211,31 +261,27 @@ with st.sidebar:
         else:
             buffer_excel = "estados_financieros_rd.xlsx"
             etiqueta_fuente = "💻 Archivo Local (En espera de archivo)"
-            st.info("ℹ️ Mostrando datos de respaldo locales hasta que subas un archivo.")
+            st.info("ℹ️ Mostrando datos locales de respaldo.")
 
     else:
         buffer_excel = "estados_financieros_rd.xlsx"
         etiqueta_fuente = "💻 Archivo Local del Servidor"
 
-    # Botón para refrescar tasa de API
-    if st.button("🔄 Actualizar Tasa de Divisas"):
+    # Botón para refrescar todas las tasas desde la API
+    if st.button("🔄 Actualizar Tasas de Divisas (API)"):
         st.cache_data.clear()
         st.rerun()
 
 # ==============================================================================
-# 4. CARGA DE DATOS Y CONVERSIÓN DE MONEDA
+# 5. CARGA DE DATOS Y CONVERSIÓN DINÁMICA A LA DIVISA ELEGIDA
 # ==============================================================================
-tasa_dop_a_usd, tasa_usd_a_rd, fecha_tasa = obtener_tasa_cambio()
-
 try:
     df_balance, df_resultados = procesar_excel(buffer_excel)
 except Exception as e:
     st.error(f"Error procesando el archivo Excel: {e}")
     st.stop()
 
-# Aplicar factor de conversión según moneda elegida
-factor = tasa_dop_a_usd if es_usd else 1.0
-
+# Conversión universal a la divisa seleccionada
 df_balance["Monto_Mostrar"] = (df_balance["Monto_DOP"] * factor).round(2)
 df_resultados["Ingresos"] = (df_resultados["Ingresos_DOP"] * factor).round(2)
 df_resultados["Costos"] = (df_resultados["Costos_DOP"] * factor).round(2)
@@ -243,27 +289,27 @@ df_resultados["Margen_Bruto"] = (df_resultados["Margen_Bruto_DOP"] * factor).rou
 df_resultados["Gastos_Operativos"] = (df_resultados["Gastos_Operativos_DOP"] * factor).round(2)
 
 # ==============================================================================
-# 5. HEADER Y FILTROS INTERACTIVOS
+# 6. HEADER Y FILTROS INTERACTIVOS
 # ==============================================================================
 st.markdown(f"""
 <div class="header-banner">
-    <h1>🏛️ Dashboard Financiero Ejecutivo</h1>
-    <p>Consumo de APIs REST en Vivo + Integración Continua con Excel desde GitHub + Analítica Multimoneda</p>
+    <h1>🏛️ Dashboard Financiero Multidivisa</h1>
+    <p>Consumo de APIs REST de Divisas Mundiales en Vivo + Integración Continua con Excel desde GitHub</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Barra de estado y filtros de página
-col_info1, col_info2, col_info3 = st.columns([2, 1, 1])
+# Barra informativa superior con badge de divisa activa
+c_info1, c_info2, c_info3 = st.columns([2, 1, 1])
 
-with col_info1:
-    st.markdown(f"**Fuente de Datos Activa:** `{etiqueta_fuente}`")
-    st.caption(f"Tasa de Cambio Oficial: **US$ 1.00 = RD$ {tasa_usd_a_rd:,.2f}** | Fecha API: **{fecha_tasa}**")
+with c_info1:
+    st.markdown(f"**Divisa de Visualización:** <span class='currency-pill'>{info_divisa['icono']} {codigo_sel} ({simbolo})</span>", unsafe_allow_html=True)
+    st.caption(f"Tasa de Conversión: **{tasa_cotizacion_texto}** | Fuente de Datos: `{etiqueta_fuente}`")
 
-with col_info2:
+with c_info2:
     lista_meses = ["Todos"] + sorted(list(df_resultados["Mes"].unique()))
     mes_sel = st.selectbox("📅 Filtrar por Mes:", lista_meses, index=0)
 
-with col_info3:
+with c_info3:
     lista_lineas = ["Todas"] + sorted(list(df_resultados["Linea_Negocio"].unique()))
     linea_sel = st.selectbox("🏢 Línea de Negocio:", lista_lineas, index=0)
 
@@ -275,7 +321,7 @@ if linea_sel != "Todas":
     df_er_filt = df_er_filt[df_er_filt["Linea_Negocio"] == linea_sel]
 
 # ==============================================================================
-# 6. CÁLCULO DE TOTALES Y TARJETAS BENTO KPI
+# 7. CÁLCULO DE TOTALES Y TARJETAS BENTO KPI CON MONEDA DINÁMICA
 # ==============================================================================
 # Balance General
 tot_activos = df_balance[df_balance["Categoria"] == "Activos"]["Monto_Mostrar"].sum()
@@ -297,28 +343,28 @@ def render_kpi(col, titulo, valor, subtitulo, icono="📌", color_borde="#1e3a8a
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown("### 🏛️ Posición Financiera (Balance General)")
+st.markdown(f"### 🏛️ Posición Financiera (Balance General en {codigo_sel})")
 k1, k2, k3 = st.columns(3)
-render_kpi(k1, "Total Activos", f"{simbolo} {tot_activos:,.2f}", "Recursos y bienes totales", "🏛️", "#2563eb")
+render_kpi(k1, "Total Activos", f"{simbolo} {tot_activos:,.2f}", f"Bienes totales ({codigo_sel})", "🏛️", "#2563eb")
 render_kpi(k2, "Total Pasivos", f"{simbolo} {tot_pasivos:,.2f}", f"Endeudamiento: {(tot_pasivos/tot_activos*100):.1f}% de activos", "💳", "#dc2626")
-render_kpi(k3, "Total Capital", f"{simbolo} {tot_capital:,.2f}", f"Patrimonio neto: {(tot_capital/tot_activos*100):.1f}% de activos", "🛡️", "#059669")
+render_kpi(k3, "Total Capital", f"{simbolo} {tot_capital:,.2f}", f"Patrimonio: {(tot_capital/tot_activos*100):.1f}% de activos", "🛡️", "#059669")
 
-st.markdown("### 📈 Indicadores de Rentabilidad (Estado de Resultados)")
+st.markdown(f"### 📈 Indicadores de Rentabilidad (Estado de Resultados en {codigo_sel})")
 r1, r2, r3, r4 = st.columns(4)
-render_kpi(r1, "Ingresos Totales", f"{simbolo} {tot_ingresos:,.2f}", "Ventas brutas del período", "💰", "#0284c7")
-render_kpi(r2, "Costos Directos", f"{simbolo} {tot_costos:,.2f}", "Costo de ventas / servicios", "📉", "#ea580c")
-render_kpi(r3, "Margen Bruto", f"{simbolo} {tot_margen:,.2f}", "Utilidad antes de gastos op.", "💵", "#16a34a")
+render_kpi(r1, "Ingresos Totales", f"{simbolo} {tot_ingresos:,.2f}", f"Ventas del período ({codigo_sel})", "💰", "#0284c7")
+render_kpi(r2, "Costos Directos", f"{simbolo} {tot_costos:,.2f}", f"Costo de ventas ({codigo_sel})", "📉", "#ea580c")
+render_kpi(r3, "Margen Bruto", f"{simbolo} {tot_margen:,.2f}", f"Utilidad bruta ({codigo_sel})", "💵", "#16a34a")
 render_kpi(r4, "% Margen Bruto", f"{pct_margen_global:.2f}%", "Meta saludable: ≥ 50.00%", "🎯", "#7c3aed")
 
 st.divider()
 
 # ==============================================================================
-# 7. GRÁFICOS INTERACTIVOS (PLOTLY)
+# 8. GRÁFICOS INTERACTIVOS (PLOTLY)
 # ==============================================================================
 g1, g2 = st.columns(2)
 
 with g1:
-    st.subheader("📊 Evolución Mensual: Ingresos vs. Margen")
+    st.subheader(f"📊 Evolución Mensual: Ingresos vs. Margen ({codigo_sel})")
     df_mes = df_er_filt.groupby("Mes", as_index=False)[["Ingresos", "Costos", "Margen_Bruto"]].sum()
     fig_bar = px.bar(
         df_mes,
@@ -332,7 +378,7 @@ with g1:
     st.plotly_chart(fig_bar, use_container_width=True)
 
 with g2:
-    st.subheader("🍩 Composición del Balance General")
+    st.subheader(f"🍩 Composición del Balance General ({codigo_sel})")
     df_cat = df_balance.groupby("Categoria", as_index=False)["Monto_Mostrar"].sum()
     fig_pie = px.pie(
         df_cat,
@@ -349,12 +395,16 @@ with g2:
 st.divider()
 
 # ==============================================================================
-# 8. TABLAS FINANCIERAS CON ESTILO CONDICIONAL Y FORMATO PROFESIONAL
+# 9. TABLAS FINANCIERAS CON FORMATO CONDICIONAL + TAB DE TODAS LAS DIVISAS
 # ==============================================================================
-tab1, tab2 = st.tabs(["📋 Tabla: Estado de Resultados", "🏛️ Tabla: Balance General"])
+tab1, tab2, tab3 = st.tabs([
+    f"📋 Estado de Resultados ({codigo_sel})",
+    f"🏛️ Balance General ({codigo_sel})",
+    "💱 Monitor Global de Divisas (API en Vivo)"
+])
 
 with tab1:
-    st.subheader(f"Detalle de Ingresos, Costos y Márgenes ({moneda_vista})")
+    st.subheader(f"Detalle de Ingresos, Costos y Márgenes expresados en {info_divisa['nombre']}")
     
     df_tabla_er = df_er_filt[[
         "Mes", "Linea_Negocio", "Ingresos", "Costos", "Margen_Bruto", "Porcentaje_Margen", "Gastos_Operativos"
@@ -381,7 +431,7 @@ with tab1:
     st.dataframe(styler_er, use_container_width=True, hide_index=True, height=400)
 
 with tab2:
-    st.subheader(f"Cuentas del Balance General ({moneda_vista})")
+    st.subheader(f"Cuentas del Balance General expresadas en {info_divisa['nombre']}")
     
     df_tabla_bg = df_balance[["Codigo", "Categoria", "Subcategoria", "Cuenta", "Monto_DOP", "Monto_Mostrar"]].copy()
     df_tabla_bg.rename(columns={"Monto_Mostrar": f"Monto ({simbolo})"}, inplace=True)
@@ -403,3 +453,41 @@ with tab2:
         .map(color_categoria, subset=["Categoria"])
     )
     st.dataframe(styler_bg, use_container_width=True, hide_index=True, height=450)
+
+with tab3:
+    st.subheader("🌐 Tabla Maestra de Tipos de Cambio Oficiales (Contra Peso Dominicano)")
+    st.caption(f"Tasas consultadas en tiempo real desde la API global | Última fecha registrada: **{fecha_api}**")
+
+    filas_divisas = []
+    for cod, info in DICCIONARIO_DIVISAS.items():
+        if cod == "DOP":
+            t_rd = 1.0
+            factor_val = 1.0
+        else:
+            cod_m = cod.lower()
+            if cod_m in tasas_api and tasas_api[cod_m] > 0:
+                factor_val = tasas_api[cod_m]
+                t_rd = 1 / factor_val
+            else:
+                t_rd = info["tasa_rd"]
+                factor_val = 1 / t_rd
+        
+        filas_divisas.append({
+            "Bandera": info["icono"],
+            "Código": cod,
+            "Nombre de la Moneda": info["nombre"],
+            "Símbolo": info["simbolo"],
+            "Valor de 1 Unidad en RD$": t_rd,
+            "Factor (1 RD$ equivale a)": factor_val
+        })
+
+    df_todas_divisas = pd.DataFrame(filas_divisas).sort_values(by="Valor de 1 Unidad en RD$", ascending=False)
+    
+    styler_div = (
+        df_todas_divisas.style
+        .format({
+            "Valor de 1 Unidad en RD$": "RD$ {:,.2f}",
+            "Factor (1 RD$ equivale a)": "{:,.6f}"
+        })
+    )
+    st.dataframe(styler_div, use_container_width=True, hide_index=True, height=460)
